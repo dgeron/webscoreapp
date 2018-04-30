@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<title>Users Scores</title>
+
+<style type="text/css">
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:400,300,600');
+
+body {
+    width: 800px;
+    margin: 20px auto;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+    font-size: 11px;
+}
+.axis line,
+.axis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+h1, h3 {
+    text-align: center;
+}
+div.tooltip {   
+    position: absolute;           
+    text-align: left;           
+    width: auto;                  
+    height: auto;                 
+    padding: 16px;             
+    font: 14px sans-serif;        
+    background: black;   
+    border-radius: 0px;           
+    pointer-events: none;  
+    color: white;       
+}
+.mean {
+    stroke-width: 1px;
+    stroke: red;
+}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
+
+<body>
+
+    <h1>Users Scores</h1>
+
+<script type="text/javascript">
+	  // Initialize Firebase
+	  var config = {
+		  apiKey: "AIzaSyD_xhgyG-nA4AYA6oGWPqI6SuESgMWu6T8",
+		  authDomain: "streetwalk-99a47.firebaseapp.com",
+		  databaseURL: "https://streetwalk-99a47.firebaseio.com",
+		  projectId: "partcquestion1",
+		  storageBucket: "partcquestion1.appspot.com",
+		  messagingSenderId: "726959820803"
+	  };
+	  firebase.initializeApp(config);
+	  var userScores = [];
+	  var usersRef = firebase.database().ref('users');
+	  	  function setUserScores(list) {
+		  var len = list.length;
+		  for (i = 0; i < len; i++) { 
+				userScores[i] = list.pop();
+		  }
+		  ready(userScores);
+	  }
+	  
+	  
+	  // this will get fired on inital load as well as when ever there is a change in the data
+	  usersRef.on("value", function(snapshot) {
+		  var data = snapshot.val();
+		  var list = [];
+		  for (var key in data) {
+			  if (data.hasOwnProperty(key)) {
+			      name = data[key].user;
+				  score = data[key].points;
+				  list.push({ name: name, score: score, key: key })
+			  }
+	 	  }
+		  setUserScores(list);
+	  });	
+	  
+  
+var margin = {top: 10, right: 10, bottom: 100, left: 60};
+
+var width = 1024 - margin.left - margin.right,
+    height = 768 - margin.top - margin.bottom;
+
+var x = d3.scale.ordinal()
+    .rangeRoundBands([0,width],1);
+
+var x2 = d3.scale.ordinal()
+    .rangeRoundBands([0,width],0);
+
+var y = d3.scale.linear() 
+    .range([height,0]); 
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var color = d3.scale.category10();
+
+var tooltip = d3.select("body").append("div")   
+        .attr("class", "tooltip")               
+        .style("opacity", 0);
+  
+
+
+function ready(data) {
+
+    data.forEach(function(d) {
+		d.household = d.name;
+        d.score = +d.score;
+    });
+
+    console.log("data", data);
+      
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    x.domain(data.map(function(d) { return d.household; }));
+    y.domain([0, d3.max(data, function(d) { return d.score; })]);
+    x2.domain(data.map(function(d) { return d.household; }));
+
+    svg.append("g")
+        .attr("class", "axis axis--x")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+        .selectAll("text")
+        .attr("y", 0)
+        .attr("x", 9)
+        .attr("dy", "-0.2em")
+		.attr("transform", "rotate(90)")
+        .style("text-anchor", "start");
+
+    svg.append("g")
+        .attr("class", "axis axis--y")
+        .call(yAxis)
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", "-4.5em")
+        .attr("text-anchor", "end")
+        .text("Score in points");
+
+    bars = svg.append("g").attr("class", "bars");
+
+    bars.selectAll(".bar")
+        .data(data)
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d) { return x(d.household); })
+        .attr("y", function(d) { return y(d.score); })
+        .attr("width", 50)
+        .attr("height", function(d) { return height - y(d.score); })
+        .style("fill", "#ccc")
+        .on("mouseover", function(d) {
+            d3.select(this).style("fill", function(d) { return color(d.household); })
+            tooltip.text(d.household + ", " + " points:" + d.score)
+            .style("opacity", 0.8)
+                    .style("left", (d3.event.pageX)+0 + "px") 
+                    .style("top", (d3.event.pageY)-0 + "px");
+        })
+        .on("mouseout", function(d) {
+            tooltip.style("opacity", 0);
+            d3.select(this).style("fill", "#ccc");
+
+        });
+
+    
+    var sum = d3.sum(data, function(d) { return d.score; }); 
+    var average = sum/data.length;
+
+    var line = d3.svg.line()
+        .x(function(d, i) { return x2(d.household) + i; })
+        .y(function(d, i) { return y(average); }); 
+
+    svg.append("path")
+        .datum(data)
+        .attr("class", "mean")
+        .attr("d", line);
+
+    svg.append("text")
+        .attr("transform", "translate(" + (width+3) + "," + y(average) + ")")
+        .attr("dy", "1em")
+        .attr("text-anchor", "end")
+        .style("fill", "red")
+        .html("Average = points is " + average);
+}
+
+</script>
+
+</body>
+</html>

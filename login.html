@@ -1,0 +1,68 @@
+
+<!DOCTYPE html>
+    <html>
+		<head>
+			<title> Login page </title>
+		</head>
+		<body>
+			<h1 style="font-family:Comic Sans Ms;text-align="center";font-size:20pt;color:#00FF00;>My Game Login Page
+			</h1>
+			<form name="login">
+				Email<input type="text" name="userid"/>
+				Password<input type="password" name="pswrd"/>
+				<input type="button" onclick="check(this.form)" value="Login"/>
+				<input type="reset" value="Cancel"/>
+			</form>
+			<script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
+			<script language="javascript">
+			// Initialize Firebase
+			var config = {
+			apiKey: "AIzaSyD_xhgyG-nA4AYA6oGWPqI6SuESgMWu6T8",
+			authDomain: "streetwalk-99a47.firebaseapp.com",
+			databaseURL: "https://streetwalk-99a47.firebaseio.com",
+			projectId: "streetwalk-99a47",
+			storageBucket: "streetwalk-99a47.appspot.com",
+			messagingSenderId: "726959820803"
+			};
+			firebase.initializeApp(config);
+			var usersRef = firebase.database().ref('users');
+			var userCredentials = [];
+			function setUserCredentials(list) {
+				var len = list.length;
+				for (i = 0; i < len; i++) { 
+					userCredentials[i] = list.pop();
+				}
+			}
+			// this will get fired on inital load as well as when ever there is a change in the data
+			usersRef.on("value", function(snapshot) {
+				var data = snapshot.val();
+				var list = [];
+				for (var key in data) {
+					if (data.hasOwnProperty(key)) {
+							email = data[key].email;
+							password = data[key].password;
+							list.push({ email: email, password: password, key: key })
+					}
+				}
+				setUserCredentials(list);
+			});
+			function check(form)/*function to check userid & password*/
+			{
+			flag = 0;
+			/*the following code checkes whether the entered userid and password are matching*/
+				for(i=0; i<userCredentials.length;i++) {
+					if(form.userid.value == userCredentials[i].email && form.pswrd.value == userCredentials[i].password)
+					{
+						window.open('main.html')/*opens the target page while Id & password matches*/
+						break;
+					} else if (flag==0) {
+						alert("Wrong Username or Password")/*displays error message*/
+						flag=1;
+					}
+				}
+			}
+		
+			</script>
+		</body>
+    </html>
+
