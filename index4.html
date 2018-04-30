@@ -54,8 +54,8 @@ div.tooltip {
 		  apiKey: "AIzaSyD_xhgyG-nA4AYA6oGWPqI6SuESgMWu6T8",
 		  authDomain: "streetwalk-99a47.firebaseapp.com",
 		  databaseURL: "https://streetwalk-99a47.firebaseio.com",
-		  projectId: "partcquestion1",
-		  storageBucket: "partcquestion1.appspot.com",
+		  projectId: "streetwalk-99a47",
+		  storageBucket: "streetwalk-99a47.appspot.com",
 		  messagingSenderId: "726959820803"
 	  };
 	  firebase.initializeApp(config);
@@ -118,7 +118,7 @@ var tooltip = d3.select("body").append("div")
 function ready(data) {
 
     data.forEach(function(d) {
-		d.household = d.name;
+		d.myUser = d.name;
         d.score = +d.score;
     });
 
@@ -130,9 +130,9 @@ function ready(data) {
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    x.domain(data.map(function(d) { return d.household; }));
+    x.domain(data.map(function(d) { return d.myUser; }));
     y.domain([0, d3.max(data, function(d) { return d.score; })]);
-    x2.domain(data.map(function(d) { return d.household; }));
+    x2.domain(data.map(function(d) { return d.myUser; }));
 
     svg.append("g")
         .attr("class", "axis axis--x")
@@ -161,14 +161,14 @@ function ready(data) {
         .data(data)
         .enter().append("rect")
         .attr("class", "bar")
-        .attr("x", function(d) { return x(d.household); })
+        .attr("x", function(d) { return x(d.myUser); })
         .attr("y", function(d) { return y(d.score); })
         .attr("width", 50)
         .attr("height", function(d) { return height - y(d.score); })
         .style("fill", "#ccc")
         .on("mouseover", function(d) {
-            d3.select(this).style("fill", function(d) { return color(d.household); })
-            tooltip.text(d.household + ", " + " points:" + d.score)
+            d3.select(this).style("fill", function(d) { return color(d.myUser); })
+            tooltip.text(d.myUser + ", " + " points:" + d.score)
             .style("opacity", 0.8)
                     .style("left", (d3.event.pageX)+0 + "px") 
                     .style("top", (d3.event.pageY)-0 + "px");
